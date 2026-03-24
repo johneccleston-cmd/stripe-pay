@@ -19,18 +19,25 @@ app.get("/pay", async (req, res) => {
     const unitAmount = Math.round(parseFloat(cleanAmount) * 100);
 
     const session = await stripe.checkout.sessions.create({
-     automatic_payment_methods: {
-    enabled: true,
-  },
- 
-      mode: "payment",
+      // Manually listing your requested methods:
+      payment_method_types: [
+        "card",             // Covers Credit Cards, Apple Pay, and Google Pay
+        "klarna",           // Buy Now, Pay Later
+        "us_bank_account"   // ACH Direct Debit
+      ],
+      // Required for ACH to function:
+      payment_method_options: {
+        us_bank_account: {
+          verification_method: "instant", // Uses Plaid/Stripe to verify bank instantly
+        },
+      },
+      customer_email: email || undefined,
       line_items: [{
         price_data: {
           currency: "usd",
           product_data: { 
             name: `Invoice #${invoice || 'General'}`,
-            // 2. Use the name in the description
-            description: `Final Payment Request for ${cust || 'Customer'} for Invoice #${invoice}`
+            description: `Payment from ${cust || 'Customer'} for Invoice #${invoice}`
           },
           unit_amount: unitAmount,
         },
@@ -39,13 +46,6 @@ app.get("/pay", async (req, res) => {
       success_url: `${req.protocol}://${req.get("host")}/success?invoice=${invoice}`,
       cancel_url: `${req.protocol}://${req.get("host")}/cancel?invoice=${invoice}`,
     });
-
-    res.redirect(303, session.url);
-  } catch (error) {
-    console.error("Stripe Error:", error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
 // Basic Success & Cancel Pages
 app.get("/success", (req, res) => {
   res.send(`<h1>Payment Successful</h1><p>Invoice #${req.query.invoice} has been processed. Thank you!</p>`);
