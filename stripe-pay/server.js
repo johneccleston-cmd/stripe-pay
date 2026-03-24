@@ -10,37 +10,29 @@ app.use(express.json());
 // Main Payment Route
 app.get("/pay", async (req, res) => {
   try {
-    const invoice = req.query.invoice || "0000";
-    const amount = req.query.amount;
+    // 1. Grab the new 'cust' variable from the URL
+    const { invoice, amount, cust } = req.query;
 
-    if (!amount) {
-      return res.status(400).send("Error: No amount provided in the link.");
-    }
+    if (!amount) return res.status(400).send("Error: Amount is required.");
 
-    // CLEANING: Removes "$", commas, and extra spaces so " $1,200.50 " becomes "1200.50"
     const cleanAmount = amount.trim().replace(/[$,]/g, "");
     const unitAmount = Math.round(parseFloat(cleanAmount) * 100);
-
-    if (isNaN(unitAmount)) {
-      return res.status(400).send("Error: Invalid amount format received.");
-    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { 
-              name: `Invoice #${invoice}`,
-              description: `Final invoice payment for {Customer:Name}`
-            },
-            unit_amount: unitAmount,
+      line_items: [{
+        price_data: {
+          currency: "usd",
+          product_data: { 
+            name: `Invoice #${invoice || 'General'}`,
+            // 2. Use the name in the description
+            description: `Payment from ${cust || 'Customer'} for Invoice #${invoice}`
           },
-          quantity: 1,
+          unit_amount: unitAmount,
         },
-      ],
+        quantity: 1,
+      }],
       success_url: `${req.protocol}://${req.get("host")}/success?invoice=${invoice}`,
       cancel_url: `${req.protocol}://${req.get("host")}/cancel?invoice=${invoice}`,
     });
@@ -51,7 +43,6 @@ app.get("/pay", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 // Basic Success & Cancel Pages
 app.get("/success", (req, res) => {
   res.send(`<h1>Payment Successful</h1><p>Invoice #${req.query.invoice} has been processed. Thank you!</p>`);
