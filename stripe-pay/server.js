@@ -5,7 +5,7 @@ const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(express.json());
-
+console.log("Stripe key:", process.env.STRIPE_SECRET_KEY);
 // universal payment endpoint
 app.get("/pay", async (req, res) => {
   try {
