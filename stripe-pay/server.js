@@ -10,25 +10,25 @@ app.use(express.json());
 // Main Payment Route
 app.get("/pay", async (req, res) => {
   try {
-    // 1. Grab the new 'cust' variable from the URL
-    const { invoice, amount, cust } = req.query;
+    // Added 'email' to the extraction here
+    const { invoice, amount, cust, email } = req.query;
 
     if (!amount) return res.status(400).send("Error: Amount is required.");
 
     const cleanAmount = amount.trim().replace(/[$,]/g, "");
     const unitAmount = Math.round(parseFloat(cleanAmount) * 100);
 
+    if (isNaN(unitAmount)) return res.status(400).send("Error: Invalid amount.");
+
     const session = await stripe.checkout.sessions.create({
-      // Manually listing your requested methods:
       payment_method_types: [
-        "card",             // Covers Credit Cards, Apple Pay, and Google Pay
-        "klarna",           // Buy Now, Pay Later
-        "us_bank_account"   // ACH Direct Debit
+        "card", 
+        "klarna", 
+        "us_bank_account"
       ],
-      // Required for ACH to function:
       payment_method_options: {
         us_bank_account: {
-          verification_method: "instant", // Uses Plaid/Stripe to verify bank instantly
+          verification_method: "instant", 
         },
       },
       customer_email: email || undefined,
@@ -46,6 +46,14 @@ app.get("/pay", async (req, res) => {
       success_url: `${req.protocol}://${req.get("host")}/success?invoice=${invoice}`,
       cancel_url: `${req.protocol}://${req.get("host")}/cancel?invoice=${invoice}`,
     });
+
+    res.redirect(303, session.url);
+  } catch (error) {
+    console.error("Stripe Error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+}); // <--- THIS WAS THE MISSING BRACKET
+
 // Basic Success & Cancel Pages
 app.get("/success", (req, res) => {
   res.send(`<h1>Payment Successful</h1><p>Invoice #${req.query.invoice} has been processed. Thank you!</p>`);
