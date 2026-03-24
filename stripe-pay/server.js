@@ -34,7 +34,7 @@ app.get("/pay", async (req, res) => {
             currency: "usd",
             product_data: { 
               name: `Invoice #${invoice}`,
-              description: `Final invoice payment for {Customer:NameS}`
+              description: `Final invoice payment for {Customer:Name}`
             },
             unit_amount: unitAmount,
           },
