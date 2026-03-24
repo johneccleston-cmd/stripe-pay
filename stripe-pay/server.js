@@ -5,7 +5,6 @@ const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(express.json());
-console.log("Stripe key:", process.env.STRIPE_SECRET_KEY);
 // universal payment endpoint
 app.get("/pay", async (req, res) => {
   try {
@@ -30,9 +29,10 @@ app.get("/pay", async (req, res) => {
 
     res.redirect(303, session.url);
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Error creating checkout session");
-  }
+    console.error("Stripe Error:", error.message);
+    // This sends the specific reason (e.g., "Invalid API Key") to the browser
+    res.status(500).json({ error: error.message });
+}
 });
 
 // success & cancel pages
