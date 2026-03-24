@@ -1,18 +1,16 @@
-
-
+require('dotenv').config(); // load .env variables
 const express = require("express");
 const app = express();
 const Stripe = require("stripe");
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // use environment variable
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.use(express.json());
 
 // universal payment endpoint
 app.get("/pay", async (req, res) => {
   try {
-    const invoice = req.query.invoice || "0000"; // dynamic invoice number
+    const invoice = req.query.invoice || "0000";
 
-    // create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
@@ -20,10 +18,8 @@ app.get("/pay", async (req, res) => {
         {
           price_data: {
             currency: "usd",
-            product_data: {
-              name: `Invoice #${invoice}`,
-            },
-            unit_amount: 5000, // $50.00, update dynamically if needed
+            product_data: { name: `Invoice #${invoice}` },
+            unit_amount: 5000,
           },
           quantity: 1,
         },
@@ -32,7 +28,6 @@ app.get("/pay", async (req, res) => {
       cancel_url: `${req.protocol}://${req.get("host")}/cancel?invoice=${invoice}`,
     });
 
-    // redirect to Stripe checkout
     res.redirect(303, session.url);
   } catch (error) {
     console.error(error);
@@ -40,13 +35,21 @@ app.get("/pay", async (req, res) => {
   }
 });
 
-// optional success & cancel pages
+// success & cancel pages
 app.get("/success", (req, res) => {
   res.send(`Payment for invoice #${req.query.invoice} was successful!`);
 });
 
 app.get("/cancel", (req, res) => {
   res.send(`Payment for invoice #${req.query.invoice} was canceled.`);
+});
+
+// root route
+app.get("/", (req, res) => {
+  res.send(`
+    <h1>Stripe Payment Server</h1>
+    <p>To test a payment, go to <a href="/pay?invoice=1234">/pay?invoice=1234</a></p>
+  `);
 });
 
 const PORT = process.env.PORT || 3000;
