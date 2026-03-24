@@ -19,7 +19,10 @@ app.get("/pay", async (req, res) => {
     const unitAmount = Math.round(parseFloat(cleanAmount) * 100);
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+     automatic_payment_methods: {
+    enabled: true,
+  },
+ 
       mode: "payment",
       line_items: [{
         price_data: {
@@ -27,7 +30,7 @@ app.get("/pay", async (req, res) => {
           product_data: { 
             name: `Invoice #${invoice || 'General'}`,
             // 2. Use the name in the description
-            description: `Payment from ${cust || 'Customer'} for Invoice #${invoice}`
+            description: `Final Payment Request for ${cust || 'Customer'} for Invoice #${invoice}`
           },
           unit_amount: unitAmount,
         },
