@@ -1,22 +1,28 @@
 app.get("/pay", async (req, res) => {
   try {
-    const { job, invoice, amount, cust, email, type } = req.query;
+    let { job, invoice, amount, cust, email, type } = req.query;
 
-    if (!amount) return res.status(400).send("Error: Amount is required.");
+    // 1. Check if amount even exists
+    if (!amount) {
+        console.error("Missing amount in request");
+        return res.status(400).send("Error: No amount was provided in the link.");
+    }
 
-    // ULTIMATE CLEANING: Removes everything except numbers and the dot
-    // This fixes the "Invalid Amount" error caused by spaces, $, or commas
-    const cleanAmount = amount.replace(/[^0-9.]/g, "");
+    // 2. The "Bulletproof" Cleaner
+    // This handles arrays, spaces, symbols, and commas all at once
+    const rawAmount = Array.isArray(amount) ? amount[0] : amount;
+    const cleanAmount = rawAmount.toString().replace(/[^0-9.]/g, "");
     let numericAmount = parseFloat(cleanAmount);
 
+    // 3. Final validation before Stripe
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      return res.status(400).send("Error: Invalid amount format received.");
+      console.error("Failed to parse amount:", rawAmount);
+      return res.status(400).send(`Error: Invalid amount format received (${rawAmount}).`);
     }
 
     let displayTitle = `Job #${job || invoice || 'General'}`;
     let paymentCategory = "Full Payment";
 
-    // LOGIC: Only divide by 2 for deposits
     if (type === "deposit") {
       numericAmount = numericAmount / 2; 
       displayTitle = `50% Deposit - Job #${job || invoice}`;
@@ -45,7 +51,7 @@ app.get("/pay", async (req, res) => {
           currency: "usd",
           product_data: { 
             name: displayTitle,
-            description: `Deposit Payment Request for ${cust || 'Customer'}`
+       description: `Deposit Payment Request for ${cust || 'Customer'}`
           },
           unit_amount: unitAmount,
         },
