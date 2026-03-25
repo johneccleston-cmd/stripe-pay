@@ -54,7 +54,7 @@ app.get("/pay", async (req, res) => {
           currency: "usd",
           product_data: { 
             name: displayTitle,
-            description: `Payment from ${cust || 'Customer'}`
+            description: `Deposit Payment Request for ${cust || 'Customer'}`
           },
           unit_amount: unitAmount,
         },
