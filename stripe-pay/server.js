@@ -1,3 +1,5 @@
+const app = express();
+
 app.get("/pay", async (req, res) => {
   try {
     let { job, invoice, amount, cust, email, type } = req.query;
