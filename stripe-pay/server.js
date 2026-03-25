@@ -1,4 +1,10 @@
-const app = express();
+// 1. You MUST import the library first
+const express = require('express'); 
+
+// 2. NOW you can initialize it
+const app = express(); 
+
+// ... rest of your code (app.get, etc.)
 
 app.get("/pay", async (req, res) => {
   try {
