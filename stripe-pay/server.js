@@ -9,24 +9,26 @@ app.use(express.json());
 
 app.get("/pay", async (req, res) => {
   try {
-    // We now look for 'job' and 'type' (deposit or final)
     const { job, invoice, amount, cust, email, type } = req.query;
 
     if (!amount) return res.status(400).send("Error: Amount is required.");
 
+    // Clean the currency string (removes $, spaces, and commas)
     const cleanAmount = amount.trim().replace(/[$,]/g, "");
     let numericAmount = parseFloat(cleanAmount);
 
-    // LOGIC: Handle 50% Deposits
     let displayTitle = `Job #${job || invoice || 'General'}`;
     let paymentCategory = "Full Payment";
 
+    // LOGIC: 
+    // If it's a deposit, we calculate 50% of the provided amount.
+    // If it's final (or anything else), we charge the full amount provided.
     if (type === "deposit") {
-      numericAmount = numericAmount / 2;
+      numericAmount = numericAmount / 2; 
       displayTitle = `50% Deposit - Job #${job || invoice}`;
       paymentCategory = "Deposit";
     } else if (type === "final") {
-      numericAmount = numericAmount / 2; // Assuming final is the other half
+      // No division here: charges the exact {Job:TotalDue} sent by Service Fusion
       displayTitle = `Final Balance - Job #${job || invoice}`;
       paymentCategory = "Final Balance";
     }
@@ -41,20 +43,18 @@ app.get("/pay", async (req, res) => {
         us_bank_account: { verification_method: "instant" },
       },
       customer_email: email || undefined,
-      
-      // THIS BLOCK IS FOR YOUR GOOGLE SHEET:
+      // Metadata for your Google Sheets tracking
       metadata: {
         job_number: job || invoice || "N/A",
         customer_name: cust || "Unknown",
         payment_type: paymentCategory
       },
-
       line_items: [{
         price_data: {
           currency: "usd",
           product_data: { 
             name: displayTitle,
-            description: `${paymentCategory} from ${cust || 'Customer'}`
+            description: `Payment from ${cust || 'Customer'}`
           },
           unit_amount: unitAmount,
         },
