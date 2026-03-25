@@ -1,31 +1,24 @@
-// 1. You MUST import the library first
-const express = require('express'); 
+const express = require('express');
+// 1. Initialize Stripe with your Secret Key from Environment Variables
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const app = express();
 
-// 2. NOW you can initialize it
-const app = express(); 
-
-// ... rest of your code (app.get, etc.)
+app.use(express.json());
 
 app.get("/pay", async (req, res) => {
   try {
     let { job, invoice, amount, cust, email, type } = req.query;
 
-    // 1. Check if amount even exists
     if (!amount) {
-        console.error("Missing amount in request");
-        return res.status(400).send("Error: No amount was provided in the link.");
+      return res.status(400).send("Error: No amount was provided.");
     }
 
-    // 2. The "Bulletproof" Cleaner
-    // This handles arrays, spaces, symbols, and commas all at once
     const rawAmount = Array.isArray(amount) ? amount[0] : amount;
     const cleanAmount = rawAmount.toString().replace(/[^0-9.]/g, "");
     let numericAmount = parseFloat(cleanAmount);
 
-    // 3. Final validation before Stripe
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      console.error("Failed to parse amount:", rawAmount);
-      return res.status(400).send(`Error: Invalid amount format received (${rawAmount}).`);
+      return res.status(400).send(`Error: Invalid amount format (${rawAmount}).`);
     }
 
     let displayTitle = `Job #${job || invoice || 'General'}`;
@@ -59,7 +52,7 @@ app.get("/pay", async (req, res) => {
           currency: "usd",
           product_data: { 
             name: displayTitle,
-       description: `Deposit Payment Request for ${cust || 'Customer'}`
+          description: `Deposit Payment Request for ${cust || 'Customer'}`
           },
           unit_amount: unitAmount,
         },
@@ -74,4 +67,10 @@ app.get("/pay", async (req, res) => {
     console.error("Stripe Error:", error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+// 2. IMPORTANT: Add the port listener so Render can find your app
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
