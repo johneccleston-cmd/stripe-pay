@@ -45,7 +45,9 @@ app.get("/pay", async (req, res) => {
       metadata: {
         job_number: job || invoice || "N/A",
         customer_name: cust || "Unknown",
-        payment_type: paymentCategory
+        payment_type: paymentCategory,
+        // This sends the UN-CLEANED full amount to your sheet
+        full_total: amount 
       },
       line_items: [{
         price_data: {
