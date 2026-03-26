@@ -58,7 +58,7 @@ app.get("/pay", async (req, res) => {
         },
         quantity: 1,
       }],
-      success_url: `${req.protocol}://${req.get("host")}/success?job=${job || invoice}`,
+      success_url: ``,
 cancel_url: 'https://integritydoornwa.com/',    });
 
     res.redirect(303, session.url);
