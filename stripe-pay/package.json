@@ -1,0 +1,21 @@
+{
+  "name": "stripe-pay",
+  "version": "1.0.0",
+  "description": "Stripe payment server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "stripe": "^12.18.0"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "author": "John Eccleston",
+  "license": "MIT",
+  "keywords": [],
+  "type": "commonjs"
+}
