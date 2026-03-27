@@ -60,7 +60,7 @@ app.get("/pay", async (req, res) => {
         },
         quantity: 1,
       }],
-      success_url: 'https://integritydoornwa.com/',
+      success_url: 'https://integritydoornwa.com/thank-you/',
 cancel_url: 'https://integritydoornwa.com/',    });
 
     res.redirect(303, session.url);
