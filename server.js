@@ -20,7 +20,7 @@ app.get("/pay", async (req, res) => {
     if (isNaN(numericAmount) || numericAmount <= 0) {
       return res.status(400).send(`Error: Invalid amount format (${rawAmount}).`);
     }
-
+  
     let displayTitle = `Job #${job || invoice || 'General'}`;
     let paymentCategory = "Full Payment";
 
